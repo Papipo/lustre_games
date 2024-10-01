@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Function to run the Gleam command
+run_gleam() {
+    gleam run -m lustre/dev start &
+    GLEAM_PID=$!
+    echo "Started Gleam process with PID: $GLEAM_PID"
+}
+
+# Function to kill the Gleam process and its children
+kill_gleam() {
+    if [ ! -z "$GLEAM_PID" ]; then
+        echo "Terminating Gleam process (PID: $GLEAM_PID) and its children..."
+        pkill -P $GLEAM_PID
+        kill -TERM $GLEAM_PID
+        wait $GLEAM_PID 2>/dev/null
+        rm -fr build/dev/erlang/playground
+        echo "Gleam process terminated."
+    fi
+}
+
+# Trap SIGINT and SIGTERM signals to properly clean up
+trap 'kill_gleam; exit' SIGINT SIGTERM
+
+# Run the Gleam command initially
+run_gleam
+
+# Watch for changes and restart when detected
+while true; do
+    if inotifywait -q -r -e modify,create,delete ../games/src; then
+        echo "Changes detected, restarting Gleam..."
+        kill_gleam
+        run_gleam
+    fi
+done
