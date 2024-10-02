@@ -18,7 +18,7 @@ pub type Hand =
 pub type Hands =
   dict.Dict(PlayerId, Hand)
 
-pub type ChosenCards =
+pub type SelectedCards =
   dict.Dict(PlayerId, Int)
 
 pub opaque type State {
@@ -26,7 +26,7 @@ pub opaque type State {
     player_ids: List(PlayerId),
     decks: Decks,
     hands: Hands,
-    chosen_cards: ChosenCards,
+    selected_cards: SelectedCards,
   )
 }
 
@@ -51,7 +51,7 @@ pub fn init(player_ids: List(PlayerId)) {
     player_ids: list.shuffle(player_ids),
     decks: initialize_decks(player_ids),
     hands: initialize_hands(player_ids),
-    chosen_cards: dict.new(),
+    selected_cards: dict.new(),
   )
   |> draw_initial_hands
 }
