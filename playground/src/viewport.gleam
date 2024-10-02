@@ -3,7 +3,8 @@ import gleam/dict.{type Dict}
 import gleam/list
 import lustre
 import lustre/attribute
-import lustre/element.{type Element}
+import lustre/effect.{type Effect}
+import lustre/element
 import lustre/element/html
 
 pub type Msg(a) {
@@ -20,10 +21,12 @@ pub type Model(props, model, msg) {
 }
 
 pub fn app() {
-  lustre.simple(init, update, view)
+  lustre.application(init, update, view)
 }
 
-fn init(model: Model(props, model, msg)) -> Model(props, model, msg) {
+fn init(
+  model: Model(props, model, msg),
+) -> #(Model(props, model, msg), Effect(Msg(msg))) {
   let clients =
     {
       use player_id <- list.map(model.player_ids)
@@ -31,22 +34,21 @@ fn init(model: Model(props, model, msg)) -> Model(props, model, msg) {
     }
     |> dict.from_list
 
-  Model(..model, clients: clients)
+  #(Model(..model, clients: clients), effect.none())
 }
 
-fn update(
-  model: Model(props, model, msg),
-  msg: Msg(msg),
-) -> Model(props, model, msg) {
+fn update(model: Model(props, model, msg), msg: Msg(msg)) {
   let state = client(model, msg.player_id)
-  // TODO handle effect
-  let #(new, _effect) = model.frontend.update(state, msg.msg)
-
+  let #(new, effect) = model.frontend.update(state, msg.msg)
   let clients = model.clients |> dict.insert(msg.player_id, new)
-  Model(..model, clients: clients)
+
+  #(
+    Model(..model, clients: clients),
+    effect |> effect.map(ClientMsg(msg.player_id, _)),
+  )
 }
 
-fn view(model: Model(props, model, msg)) -> Element(Msg(msg)) {
+fn view(model: Model(props, model, msg)) {
   html.div(
     [attribute.class("flex gap-4 justify-evenly h-full p-4")],
     list.map(model.player_ids, fn(player_id) {
@@ -55,11 +57,10 @@ fn view(model: Model(props, model, msg)) -> Element(Msg(msg)) {
           html.text("Player #" <> player_id),
         ]),
         html.div([attribute.class("flex-1")], [
-          element.text("Client view here"),
           model
-            |> client(player_id)
-            |> model.frontend.view()
-            |> element.map(ClientMsg(player_id, _)),
+          |> client(player_id)
+          |> model.frontend.view()
+          |> element.map(ClientMsg(player_id, _)),
         ]),
       ])
     }),
