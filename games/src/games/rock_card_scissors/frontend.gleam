@@ -1,4 +1,6 @@
-import games/rock_card_scissors/common.{type Card, Paper, Rock, Scissors}
+import games/rock_card_scissors/shared.{
+  type Card, type Props as Model, Paper, Props as Model, Rock, Scissors,
+}
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, Some}
@@ -12,19 +14,6 @@ import lustre/event
 pub type Msg {
   UserClickedCard(index: Int)
   CardSelected(index: Int)
-}
-
-pub type Opponent {
-  Opponent(hand_size: Int, deck_size: Int)
-}
-
-pub type Model {
-  Model(
-    selected_card: Option(Int),
-    hand: List(Card),
-    deck_size: Int,
-    opponent: Opponent,
-  )
 }
 
 pub fn init(props: Model) {

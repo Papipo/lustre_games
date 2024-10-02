@@ -1,6 +1,7 @@
 import games.{type PlayerId}
-import games/rock_card_scissors/common.{type Card, Paper, Rock, Scissors}
-import games/rock_card_scissors/frontend
+import games/rock_card_scissors/shared.{
+  type Card, Opponent, Paper, Props, Rock, Scissors,
+}
 import gleam/dict
 import gleam/list
 import gleam/option.{None}
@@ -29,15 +30,15 @@ pub opaque type State {
   )
 }
 
-pub fn view_props(state: State, player_id: PlayerId) {
+pub fn to_frontend(state: State, player_id: PlayerId) {
   let opponent_id = opponent_id(state, player_id)
   let opponent =
-    frontend.Opponent(
+    Opponent(
       hand_size: hand(state, opponent_id) |> list.length(),
       deck_size: deck(state, opponent_id) |> list.length(),
     )
 
-  frontend.Model(
+  Props(
     selected_card: None,
     hand: hand(state, player_id),
     deck_size: deck(state, player_id) |> list.length(),
